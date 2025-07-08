@@ -4,7 +4,17 @@
 #include <QMainWindow>
 #include "Inventario.h"
 
-QT_BEGIN_NAMESPACE
+#include <QtCharts/QChartView>
+#include <QtCharts/QPieSeries>
+#include <QtCharts/QBarSeries>
+#include <QtCharts/QBarSet>
+#include <QtCharts/QBarCategoryAxis>
+#include <QtCharts/QValueAxis>
+#include "ui_mainwindow.h"
+
+
+
+    QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
@@ -24,10 +34,15 @@ private slots:
     void mostrarProductos();
     void mostrarStockBajo();
     void editarStockProducto();
+    void editarStockMinimo();
 
 private:
     Ui::MainWindow *ui;
     Inventario inventario;
+    QChartView* chartView;
+
+    void actualizarGraficoCategoria();
+    void actualizarGraficoStock(const Producto& p);
 };
 
 #endif // MAINWINDOW_H

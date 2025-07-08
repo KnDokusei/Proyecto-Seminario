@@ -3,40 +3,69 @@
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
-   <rect><x>0</x><y>0</y><width>700</width><height>500</height></rect>
+   <rect><x>0</x><y>0</y><width>900</width><height>600</height></rect>
   </property>
-  <property name="windowTitle"><string>Sistema de Inventario</string></property>
+  <property name="windowTitle">
+   <string>Sistema de Inventario</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+
+    <!-- LADO IZQUIERDO -->
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayoutTop">
-      <item><widget class="QPushButton" name="btnCargar"><property name="text"><string>Cargar</string></property></widget></item>
-      <item><widget class="QPushButton" name="btnGuardar"><property name="text"><string>Guardar</string></property></widget></item>
-      <item><widget class="QPushButton" name="btnAgregar"><property name="text"><string>Agregar</string></property></widget></item>
-      <item><widget class="QPushButton" name="btnEliminar"><property name="text"><string>Eliminar</string></property></widget></item>
-      <item><widget class="QPushButton" name="btnStockBajo"><property name="text"><string>Stock Bajo</string></property></widget></item>
-    </layout>
+     <layout class="QVBoxLayout" name="verticalLayoutIzquierdo">
+
+      <!-- BOTONES SUPERIORES -->
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayoutTop">
+        <item><widget class="QPushButton" name="btnCargar"><property name="text"><string>Cargar</string></property></widget></item>
+        <item><widget class="QPushButton" name="btnGuardar"><property name="text"><string>Guardar</string></property></widget></item>
+        <item><widget class="QPushButton" name="btnAgregar"><property name="text"><string>Agregar</string></property></widget></item>
+        <item><widget class="QPushButton" name="btnEliminar"><property name="text"><string>Eliminar</string></property></widget></item>
+        <item><widget class="QPushButton" name="btnStockBajo"><property name="text"><string>Stock Bajo</string></property></widget></item>
+        <item><widget class="QPushButton" name="btnEditarMinimo"><property name="text"><string>Editar Stock Mínimo</string></property></widget></item>
+       </layout>
+      </item>
+
+      <!-- BUSCAR POR CATEGORÍA -->
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayoutSearch">
+        <item><widget class="QLineEdit" name="txtCategoria"><property name="placeholderText"><string>Buscar Categoría</string></property></widget></item>
+        <item><widget class="QPushButton" name="btnBuscarCategoria"><property name="text"><string>Buscar</string></property></widget></item>
+       </layout>
+      </item>
+
+      <!-- TABLA DE PRODUCTOS -->
+      <item>
+       <widget class="QTableWidget" name="tablaProductos">
+        <property name="rowCount"><number>0</number></property>
+        <property name="columnCount"><number>5</number></property>
+        <column><property name="text"><string>ID</string></property></column>
+        <column><property name="text"><string>Nombre</string></property></column>
+        <column><property name="text"><string>Categoría</string></property></column>
+        <column><property name="text"><string>Precio</string></property></column>
+        <column><property name="text"><string>Cantidad</string></property></column>
+       </widget>
+      </item>
+     </layout>
     </item>
+
+    <!-- LADO DERECHO (GRÁFICO) -->
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayoutSearch">
-      <item><widget class="QLineEdit" name="txtCategoria"><property name="placeholderText"><string>Buscar Categoría</string></property></widget></item>
-      <item><widget class="QPushButton" name="btnBuscarCategoria"><property name="text"><string>Buscar</string></property></widget></item>
-    </layout>
-    </item>
-    <item>
-     <widget class="QTableWidget" name="tablaProductos">
-      <property name="columnCount"><number>5</number></property>
-      <property name="rowCount"><number>0</number></property>
-      <column><property name="text"><string>ID</string></property></column>
-      <column><property name="text"><string>Nombre</string></property></column>
-      <column><property name="text"><string>Categoría</string></property></column>
-      <column><property name="text"><string>Precio</string></property></column>
-      <column><property name="text"><string>Cantidad</string></property></column>
+     <widget class="QWidget" name="chartPlaceholder">
+      <property name="minimumSize">
+       <size><width>300</width><height>0</height></size>
+      </property>
      </widget>
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar"/>
+
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect><x>0</x><y>0</y><width>900</width><height>26</height></rect>
+   </property>
+  </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>

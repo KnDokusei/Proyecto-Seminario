@@ -4,6 +4,17 @@
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QHeaderView>
+#include <QMap>
+#include <algorithm>
+
+#include <QtCharts/QChartView>
+#include <QtCharts/QPieSeries>
+#include <QtCharts/QBarSeries>
+#include <QtCharts/QBarSet>
+#include <QtCharts/QBarCategoryAxis>
+#include <QtCharts/QValueAxis>
+
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -18,15 +29,50 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->btnBuscarCategoria, &QPushButton::clicked, this, &MainWindow::buscarPorCategoria);
     connect(ui->btnStockBajo, &QPushButton::clicked, this, &MainWindow::mostrarStockBajo);
     connect(ui->tablaProductos, &QTableWidget::doubleClicked, this, &MainWindow::editarStockProducto);
+    connect(ui->btnEditarMinimo, &QPushButton::clicked, this, &MainWindow::editarStockMinimo);
+
+    connect(ui->tablaProductos, &QTableWidget::itemSelectionChanged, this, [this]() {
+        int fila = ui->tablaProductos->currentRow();
+        if (fila < 0) {
+            actualizarGraficoCategoria();
+            return;
+        }
+
+        QString id = ui->tablaProductos->item(fila, 0)->text();
+        Producto* p = inventario.buscarPorId(id.toStdString());
+        if (p) actualizarGraficoStock(*p);
+    });
 
     QStringList headers = {"ID", "Nombre", "Categoría", "Precio", "Cantidad"};
     ui->tablaProductos->setColumnCount(5);
     ui->tablaProductos->setHorizontalHeaderLabels(headers);
     ui->tablaProductos->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
+    // Crear y conectar el gráfico visual
+    chartView = new QChartView(this);
+    chartView->setRenderHint(QPainter::Antialiasing);
+
+    // Reemplaza el placeholder en el layout por el gráfico real
+    auto layout = qobject_cast<QHBoxLayout*>(ui->centralwidget->layout());
+    layout->replaceWidget(ui->chartPlaceholder, chartView);
+    ui->chartPlaceholder->hide();
+
+    // Estilo visual
     setStyleSheet("QPushButton { background-color: #D0E8FF; } "
                   "QLineEdit { background-color: #FFF; padding: 2px; } "
                   "QTableWidget { background-color: #FFF; gridline-color: #CCC; }");
+
+    actualizarGraficoCategoria();
+    // Cargar automáticamente archivo anterior si existe
+    std::string rutaAnterior = inventario.obtenerRutaUltimoArchivo();
+    if (!rutaAnterior.empty()) {
+        QFile file(QString::fromStdString(rutaAnterior));
+        if (file.exists()) {
+            inventario.cargarDesdeArchivo(rutaAnterior);
+            mostrarProductos();
+        }
+    }
+
 }
 
 MainWindow::~MainWindow() {
@@ -36,13 +82,18 @@ MainWindow::~MainWindow() {
 void MainWindow::cargarInventario() {
     QString archivo = QFileDialog::getOpenFileName(this, "Abrir Inventario", "", "CSV (*.csv)");
     if (!archivo.isEmpty()) {
-        if (inventario.cargarDesdeArchivo(archivo.toStdString()))
+        std::string ruta = archivo.toStdString();
+
+        if (inventario.cargarDesdeArchivo(ruta)) {
             QMessageBox::information(this, "Éxito", "Inventario cargado.");
-        else
-            QMessageBox::warning(this, "Error", "No se pudo cargar.");
+            inventario.guardarRutaUltimoArchivo(ruta);  // ← Guarda la ruta para futuras sesiones
+            mostrarProductos();
+        } else {
+            QMessageBox::warning(this, "Error", "No se pudo cargar el archivo.");
+        }
     }
-    mostrarProductos();
 }
+
 
 void MainWindow::guardarInventario() {
     QString archivo = QFileDialog::getSaveFileName(this, "Guardar Inventario", "", "CSV (*.csv)");
@@ -106,14 +157,34 @@ void MainWindow::mostrarProductos() {
     auto lista = inventario.getProductos();
     ui->tablaProductos->setRowCount(lista.size());
 
-    for (int i = 0; i < lista.size(); ++i) {
-        ui->tablaProductos->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(lista[i].getId())));
-        ui->tablaProductos->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(lista[i].getNombre())));
-        ui->tablaProductos->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(lista[i].getCategoria())));
-        ui->tablaProductos->setItem(i, 3, new QTableWidgetItem(QString::number(lista[i].getPrecio())));
-        ui->tablaProductos->setItem(i, 4, new QTableWidgetItem(QString::number(lista[i].getCantidad())));
+    for (int i = 0; i < static_cast<int>(lista.size()); ++i) {
+        const auto& prod = lista[i];
+        int cantidad = prod.getCantidad();
+
+        QTableWidgetItem* itemID = new QTableWidgetItem(QString::fromStdString(prod.getId()));
+        QTableWidgetItem* itemNombre = new QTableWidgetItem(QString::fromStdString(prod.getNombre()));
+        QTableWidgetItem* itemCategoria = new QTableWidgetItem(QString::fromStdString(prod.getCategoria()));
+        QTableWidgetItem* itemPrecio = new QTableWidgetItem(QString::number(prod.getPrecio()));
+        QTableWidgetItem* itemCantidad = new QTableWidgetItem(QString::number(cantidad));
+
+        // Si el stock es menor que 5, marcar toda la fila con rojo suave
+        if (cantidad < 5) {
+            QColor rojoSuave(255, 180, 180); // fondo rojo claro legible
+            itemID->setBackground(rojoSuave);
+            itemNombre->setBackground(rojoSuave);
+            itemCategoria->setBackground(rojoSuave);
+            itemPrecio->setBackground(rojoSuave);
+            itemCantidad->setBackground(rojoSuave);
+        }
+
+        ui->tablaProductos->setItem(i, 0, itemID);
+        ui->tablaProductos->setItem(i, 1, itemNombre);
+        ui->tablaProductos->setItem(i, 2, itemCategoria);
+        ui->tablaProductos->setItem(i, 3, itemPrecio);
+        ui->tablaProductos->setItem(i, 4, itemCantidad);
     }
 }
+
 
 void MainWindow::mostrarStockBajo() {
     auto stockBajo = inventario.generarReporteStockBajo();
@@ -143,4 +214,85 @@ void MainWindow::editarStockProducto() {
         QMessageBox::warning(this, "Error", "Operación inválida o stock insuficiente.");
 
     mostrarProductos();
+}
+
+void MainWindow::actualizarGraficoCategoria() {
+    QPieSeries* series = new QPieSeries();
+    QMap<QString, int> conteo;
+
+    for (const auto& p : inventario.getProductos())
+        conteo[QString::fromStdString(p.getCategoria())]++;
+
+    for (auto it = conteo.begin(); it != conteo.end(); ++it)
+        series->append(it.key(), it.value());
+
+    QChart* chart = new QChart();
+    chart->addSeries(series);
+    chart->setTitle("Distribución por Categoría");
+    chart->legend()->setAlignment(Qt::AlignRight);
+
+    chartView->setChart(chart);
+}
+
+void MainWindow::actualizarGraficoStock(const Producto& p) {
+    QBarSet* actual = new QBarSet("Actual");
+    QBarSet* minimo = new QBarSet("Mínimo recomendado");
+
+    *actual << p.getCantidad();
+    *minimo << 5;
+
+    QBarSeries* series = new QBarSeries();
+    series->append(actual);
+    series->append(minimo);
+
+    QChart* chart = new QChart();
+    chart->addSeries(series);
+    chart->setTitle("Stock de '" + QString::fromStdString(p.getNombre()) + "'");
+    chart->setAnimationOptions(QChart::SeriesAnimations);
+
+    QStringList categorias;
+    categorias << "Stock";
+
+    QBarCategoryAxis* ejeX = new QBarCategoryAxis();
+    ejeX->append(categorias);
+    chart->addAxis(ejeX, Qt::AlignBottom);
+    series->attachAxis(ejeX);
+
+    QValueAxis* ejeY = new QValueAxis();
+    ejeY->setLabelFormat("%d");
+    ejeY->setTitleText("Unidades");
+    ejeY->setTickType(QValueAxis::TicksFixed);
+    ejeY->setTickInterval(1);              // paso fijo de 1
+    ejeY->setMinorTickCount(0);           // sin sub-divisiones
+
+    int maxY = std::max(p.getCantidad(), 5) + 1;  // para dejar un poco de margen visual
+    ejeY->setRange(0, maxY);                     // forzar eje de 0 a máximo
+
+    ejeY->setLabelFormat("%d");  // Mostrar solo números enteros
+    ejeY->setTitleText("Unidades");
+    chart->addAxis(ejeY, Qt::AlignLeft);
+    series->attachAxis(ejeY);
+
+    chart->legend()->setVisible(true);
+    chart->legend()->setAlignment(Qt::AlignBottom);
+
+    chartView->setChart(chart);
+}
+
+void MainWindow::editarStockMinimo() {
+    int fila = ui->tablaProductos->currentRow();
+    if (fila < 0) return;
+
+    QString id = ui->tablaProductos->item(fila, 0)->text();
+    Producto* p = inventario.buscarPorId(id.toStdString());
+    if (!p) return;
+
+    bool ok;
+    int nuevoMin = QInputDialog::getInt(this, "Stock mínimo", "Nuevo mínimo recomendado:",
+                                        p->getStockMinimo(), 0, 9999, 1, &ok);
+    if (ok) {
+        p->setStockMinimo(nuevoMin);
+        mostrarProductos();
+        actualizarGraficoStock(*p);
+    }
 }

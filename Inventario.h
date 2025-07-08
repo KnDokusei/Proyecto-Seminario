@@ -23,11 +23,17 @@ public:
     std::vector<Producto> buscarPorNombre(const std::string& nombre);
     std::vector<Producto> buscarPorCategoria(const std::string& categoria);
 
-    std::vector<std::string> obtenerResumenTodos() const;
     std::vector<std::string> generarReporteStockBajo(int limite = 5) const;
     bool actualizarStockPorId(const std::string& id, int cambioCantidad);
-    const std::vector<Producto>& getProductos() const;
+    std::vector<std::string> obtenerResumenTodos() const;
+    std::vector<Producto>& getProductos(); // para que MainWindow acceda directamente
+
+    const std::vector<Producto>& getProductos() const;  // nuevo getter
+
+    bool guardarRutaUltimoArchivo(const std::string& ruta) const;
+    std::string obtenerRutaUltimoArchivo() const;
 
 };
 
 #endif // INVENTARIO_H
+

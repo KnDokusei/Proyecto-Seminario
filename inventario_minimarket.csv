@@ -1,0 +1,23 @@
+ID,Nombre,Categoria,Precio,Cantidad,StockMinimo
+P00001,Leche Entera,Lácteos,2556,9,5
+P00002,Yogur Natural,Lácteos,2845,23,10
+P00003,Queso Gauda,Lácteos,1184,49,5
+P00004,Mantequilla,Lácteos,2169,27,4
+P00005,Leche Descremada,Lácteos,532,3,5
+P00006,Fideos Spaghetti,Abarrotes,2972,47,10
+P00007,Arroz Grado1,Abarrotes,1835,41,10
+P00008,Harina,Abarrotes,2436,34,5
+P00009,Lentejas,Abarrotes,2208,34,5
+P00010,Azúcar,Abarrotes,1053,45,10
+P00011,Coca-Cola 1.5L,Bebidas,2358,25,8
+P00012,Fanta 1.5L,Bebidas,2709,48,8
+P00013,Agua Mineral,Bebidas,2295,26,5
+P00014,Jugo Néctar,Bebidas,2978,46,6
+P00015,Bebida Energética,Bebidas,1783,16,10
+P00016,Papas Fritas,Snacks,2770,12,6
+P00017,Ramitas,Snacks,1917,32,5
+P00018,Chocolatín,Snacks,2101,4,5
+P00019,Galletas,Snacks,2680,34,6
+P00020,Cereal Bar,Snacks,2644,41,7
+P00021,Detergente,Aseo,1465,11,4
+P00022,Lavalosas,Aseo,2637,50,6

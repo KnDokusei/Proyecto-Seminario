@@ -1,6 +1,7 @@
 #include "Inventario.h"
 #include "Utilidades.h"
 #include <fstream>
+#include <iostream>
 
 bool Inventario::cargarDesdeArchivo(const std::string& nombreArchivo) {
     std::ifstream archivo(nombreArchivo);
@@ -9,34 +10,50 @@ bool Inventario::cargarDesdeArchivo(const std::string& nombreArchivo) {
     productos.clear();
     int mayorID = 0;
     std::string linea;
+
     while (getline(archivo, linea)) {
         auto campos = dividir(linea, ',');
-        if (campos.size() == 5) {
-            Producto p(
-                limpiarEspacios(campos[0]), limpiarEspacios(campos[1]),
-                limpiarEspacios(campos[2]), std::stod(campos[3]), std::stoi(campos[4])
-            );
+        if (campos.size() < 5) continue;
+
+        try {
+            std::string id = limpiarEspacios(campos[0]);
+            std::string nombre = limpiarEspacios(campos[1]);
+            std::string categoria = limpiarEspacios(campos[2]);
+            double precio = std::stod(campos[3]);
+            int cantidad = std::stoi(campos[4]);
+
+            Producto p(id, nombre, categoria, precio, cantidad);
             productos.push_back(p);
-            if (campos[0].size() >= 6 && campos[0][0] == 'P') {
-                try {
-                    int num = std::stoi(campos[0].substr(1));
-                    if (num > mayorID) mayorID = num;
-                } catch (...) {}
+
+            if (id.size() >= 6 && id[0] == 'P') {
+                int num = std::stoi(id.substr(1));
+                if (num > mayorID) mayorID = num;
             }
+
+        } catch (const std::exception& e) {
+            std::cerr << "Error al procesar línea: " << linea << " -> " << e.what() << "\n";
+            continue; // salta a la siguiente línea
         }
     }
+
     archivo.close();
     contadorID = mayorID + 1;
     return true;
 }
+
 
 bool Inventario::guardarEnArchivo(const std::string& nombreArchivo) const {
     std::ofstream archivo(nombreArchivo);
     if (!archivo.is_open()) return false;
 
     for (const auto& p : productos) {
-        archivo << p.getId() << "," << p.getNombre() << "," << p.getCategoria()
-                << "," << p.getPrecio() << "," << p.getCantidad() << "\n";
+        archivo << p.getId() << ","
+                << p.getNombre() << ","
+                << p.getCategoria() << ","
+                << p.getPrecio() << ","
+                << p.getCantidad() << ","
+                << p.getStockMinimo() << "\n";
+
     }
     archivo.close();
     return true;
@@ -126,6 +143,27 @@ std::string Inventario::generarID() {
     return id;
 }
 
-const std::vector<Producto>& Inventario::getProductos() const {
+std::vector<Producto>& Inventario::getProductos() {
     return productos;
 }
+
+bool Inventario::guardarRutaUltimoArchivo(const std::string& ruta) const {
+    std::ofstream archivo("config.txt");
+    if (!archivo.is_open()) return false;
+    archivo << ruta;
+    archivo.close();
+    return true;
+}
+
+std::string Inventario::obtenerRutaUltimoArchivo() const {
+    std::ifstream archivo("config.txt");
+    if (!archivo.is_open()) return "";
+    std::string ruta;
+    std::getline(archivo, ruta);
+    archivo.close();
+    return ruta;
+}
+
+
+
+
